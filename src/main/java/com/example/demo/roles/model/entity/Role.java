@@ -9,6 +9,9 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.example.demo.permissions.model.entity.Permission;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,7 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.JoinColumn;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", schema = "dbo")
 public class Role {
     @Id
     @GeneratedValue
@@ -30,12 +33,17 @@ public class Role {
             nullable = false)
     private UUID id;
 
+    @NotBlank(message = "Mã vai trò không được để trống")
+    @Size(max = 50)
     @Column(name = "code", length = 50)
     private String code;
 
+    @NotBlank(message = "Tên vai trò không được để trống")
+    @Size(max = 100)
     @Column(name = "name", length = 100)
     private String name;
 
+    @Size(max = 255)
     @Column(name = "description", length = 255)
     private String description;
 
@@ -87,6 +95,7 @@ public class Role {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "role_permissions",
+        schema = "dbo",
         joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id")
     )

@@ -7,19 +7,42 @@
 
   <a class="sidebar-link"
      th:href="@{/admin}"
-     th:classappend="${currentMenu == 'home'} ? ' active' : ''"
+     th:classappend="${currentMenu != null && currentMenu == 'home'} ? ' active' : ''"
      data-label="Trang chủ quản trị">
     <i class="bi bi-house-door-fill nav-icon"></i>
     <span class="nav-text">Trang chủ</span>
   </a>
 
-
   <a class="sidebar-link"
      th:href="@{/admin/students}"
-     th:classappend="${currentMenu == 'students'} ? ' active' : ''"
+     th:classappend="${currentMenu != null && currentMenu == 'students'} ? ' active' : ''"
      data-label="Sinh viên">
     <i class="bi bi-mortarboard-fill nav-icon"></i>
     <span class="nav-text">Sinh viên</span>
+  </a>
+
+  <a class="sidebar-link"
+     th:href="@{/admin/users}"
+     th:classappend="${currentMenu != null && currentMenu == 'users'} ? ' active' : ''"
+     data-label="Người dùng">
+    <i class="bi bi-people-fill nav-icon"></i>
+    <span class="nav-text">Người dùng</span>
+  </a>
+
+  <a class="sidebar-link"
+     th:href="@{/admin/roles}"
+     th:classappend="${currentMenu != null && currentMenu == 'roles'} ? ' active' : ''"
+     data-label="Vai trò">
+    <i class="bi bi-person-badge nav-icon"></i>
+    <span class="nav-text">Vai trò</span>
+  </a>
+
+  <a class="sidebar-link"
+     th:href="@{/admin/permissions}"
+     th:classappend="${currentMenu != null && currentMenu == 'permissions'} ? ' active' : ''"
+     data-label="Quyền">
+    <i class="bi bi-shield-check nav-icon"></i>
+    <span class="nav-text">Quyền</span>
   </a>
 
 </aside>

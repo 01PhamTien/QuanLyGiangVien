@@ -6,9 +6,11 @@ import java.util.UUID;
 import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "permissions")
+@Table(name = "permissions", schema = "dbo")
 public class Permission {
     @Id
     @GeneratedValue
@@ -18,15 +20,21 @@ public class Permission {
             nullable = false)
     private UUID id;
 
+    @NotBlank(message = "Mã quyền không được để trống")
+    @Size(max = 100)
     @Column(name = "code", length = 100)
     private String code;
 
+    @NotBlank(message = "Tên hiển thị không được để trống")
+    @Size(max = 150)
     @Column(name = "name", length = 150)
     private String name;
 
-     @Column(name = "module", length = 100)
+    @Size(max = 100)
+    @Column(name = "module", length = 100)
     private String module;
 
+    @Size(max = 255)
     @Column(name = "description", length = 255)
     private String description;
 

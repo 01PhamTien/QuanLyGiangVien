@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "role_permissions")
+@Table(name = "role_permissions", schema = "dbo")
 @IdClass(RolePermissionId.class)
 public class RolePermission {
 

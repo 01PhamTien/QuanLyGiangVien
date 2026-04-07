@@ -13,33 +13,138 @@
       </ol>
     </nav>
 
-    <div class="card shadow-sm border-0" style="max-width: 600px;">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 960px;">
       <div class="card-header bg-white py-3">
         <h5 class="mb-0 fw-semibold">
           <i class="bi bi-people-fill me-2 text-primary"></i>
           <span th:text="${isEdit} ? 'Cập nhật sinh viên' : 'Thêm sinh viên'"></span>
         </h5>
+        <p class="text-muted small mb-0 mt-2">Các trường bám theo cột bảng <code>dbo.students</code> và khóa <code>user_id</code>.</p>
       </div>
       <div class="card-body">
-        <form th:action="@{/admin/students/save}" th:object="${student}" method="post" novalidate>
+        <form th:action="@{/admin/students/save}" th:object="${student}" method="post" novalidate accept-charset="UTF-8">
           <input type="hidden" th:field="*{id}" th:if="${isEdit}"/>
           <input type="hidden" name="isEdit" th:value="${isEdit}"/>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Tên sinh viên <span class="text-danger">*</span></label>
-            <input type="text" th:field="*{name}"
-                   th:class="'form-control' + (${#fields.hasErrors('name')} ? ' is-invalid' : '')"
-                   maxlength="150" placeholder="Nhập tên sinh viên"/>
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+          <h6 class="text-secondary border-bottom pb-2 mb-3">Thông tin chính</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Mã sinh viên <span class="text-danger">*</span> <span class="text-muted small">code</span></label>
+              <input type="text" th:field="*{code}"
+                     th:class="'form-control' + (${#fields.hasErrors('code')} ? ' is-invalid' : '')"
+                     maxlength="20" placeholder="VD: SV00001" th:readonly="${isEdit}"/>
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+              <small class="text-muted" th:if="${isEdit}">Mã không đổi sau khi tạo.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Trạng thái <span class="text-muted small">status</span></label>
+              <select th:field="*{status}" class="form-select">
+                <option value="">— Chọn —</option>
+                <option value="studying">Đang học</option>
+                <option value="graduated">Đã tốt nghiệp</option>
+                <option value="suspended">Bảo lưu / tạm dừng</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span> <span class="text-muted small">full_name</span></label>
+              <input type="text" th:field="*{fullname}"
+                     th:class="'form-control' + (${#fields.hasErrors('fullname')} ? ' is-invalid' : '')"
+                     maxlength="100" placeholder="Họ tên đầy đủ có dấu"/>
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('fullname')}" th:errors="*{fullname}"></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Tài khoản (UUID) <span class="text-muted small">user_id → users.id</span></label>
+              <input type="text" class="form-control font-monospace" th:field="*{user_id}"
+                     placeholder="Để trống nếu chưa gán tài khoản"/>
+              <small class="text-muted">Nhập đúng UUID người dùng trong bảng <code>users</code>.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Giới tính <span class="text-muted small">gender</span></label>
+              <select th:field="*{gender}" class="form-select">
+                <option value="">—</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Ngày sinh <span class="text-muted small">date_of_birth</span></label>
+              <input type="date" th:field="*{date_of_birth}" class="form-control"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Ngày cấp CCCD/CMND <span class="text-muted small">date_of_issue</span></label>
+              <input type="date" th:field="*{date_of_issue}" class="form-control"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Số CCCD/CMND <span class="text-muted small">personal_identification_number</span></label>
+              <input type="text" th:field="*{personal_identification_number}" class="form-control" maxlength="20"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nơi cấp <span class="text-muted small">card_place</span></label>
+              <input type="text" th:field="*{card_place}" class="form-control" maxlength="100"
+                     placeholder="VD: Cục Cảnh sát QLHC về TTXH"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Địa chỉ thường trú <span class="text-muted small">address</span></label>
+              <input type="text" th:field="*{address}" class="form-control" maxlength="300"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Địa chỉ hiện tại <span class="text-muted small">current_address</span></label>
+              <input type="text" th:field="*{current_address}" class="form-control" maxlength="300"/>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Email</label>
-            <input type="email" th:field="*{email}"
-                   th:class="'form-control' + (${#fields.hasErrors('email')} ? ' is-invalid' : '')"
-                   maxlength="150" placeholder="VD: sv@school.edu.vn"/>
-            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+          <h6 class="text-secondary border-bottom pb-2 mb-3 mt-4">Khóa ngoại (UNIQUEIDENTIFIER)</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">academic_year_year</label>
+              <input type="text" class="form-control font-monospace" th:field="*{academic_year_year}" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">department_id</label>
+              <input type="text" class="form-control font-monospace" th:field="*{department_id}" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">major_id</label>
+              <input type="text" class="form-control font-monospace" th:field="*{major_id}" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">training_program_id</label>
+              <input type="text" class="form-control font-monospace" th:field="*{training_program_id}" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">student_classe_id</label>
+              <input type="text" class="form-control font-monospace" th:field="*{student_classe_id}" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Năm / thời điểm nhập học <span class="text-muted small">admission_year</span></label>
+              <input type="datetime-local" class="form-control" th:field="*{admission_year}"/>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" th:field="*{isActive}" id="stActive"/>
+                <label class="form-check-label" for="stActive">Đang hoạt động <span class="text-muted small">is_active</span></label>
+              </div>
+            </div>
           </div>
+
+          <th:block th:if="${isEdit}">
+            <h6 class="text-secondary border-bottom pb-2 mb-3 mt-4">Hệ thống (chỉ đọc)</h6>
+            <div class="row g-2 small text-muted">
+              <div class="col-md-6"><strong>id</strong><br/><code th:text="${student.id}"></code></div>
+              <div class="col-md-6"><strong>created_at</strong><br/><span th:text="${student.createdAt != null ? #temporals.format(student.createdAt, 'dd/MM/yyyy HH:mm:ss') : '—'}"></span></div>
+              <div class="col-md-6"><strong>updated_at</strong><br/><span th:text="${student.updatedAt != null ? #temporals.format(student.updatedAt, 'dd/MM/yyyy HH:mm:ss') : '—'}"></span></div>
+              <div class="col-md-6"><strong>created_by</strong><br/><code th:text="${student.createdBy != null ? student.createdBy : '—'}"></code></div>
+              <div class="col-md-6"><strong>updated_by</strong><br/><code th:text="${student.updatedBy != null ? student.updatedBy : '—'}"></code></div>
+              <div class="col-md-6"><strong>deleted_at</strong><br/><span th:text="${student.deletedAt != null ? #temporals.format(student.deletedAt, 'dd/MM/yyyy HH:mm:ss') : '—'}"></span></div>
+              <div class="col-md-6"><strong>deleted_by</strong><br/><code th:text="${student.deletedBy != null ? student.deletedBy : '—'}"></code></div>
+            </div>
+          </th:block>
 
           <div class="mt-4 d-flex gap-2">
             <button type="submit" class="btn btn-primary">
@@ -58,4 +163,3 @@
 </th:block>
 </body>
 </html>
-

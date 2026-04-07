@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layoutPage(pageTitle=${isEdit} ? 'Sửa vai trò' : 'Thêm vai trò', content=~{:: content})}">
+<body>
+<th:block th:fragment="content">
+  <div class="container-fluid">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/admin}">Trang quản trị</a></li>
+        <li class="breadcrumb-item"><a th:href="@{/admin/roles}">Vai trò</a></li>
+        <li class="breadcrumb-item active" th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'"></li>
+      </ol>
+    </nav>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 720px;">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-semibold">
+          <i class="bi bi-person-badge me-2 text-primary"></i>
+          <span th:text="${isEdit} ? 'Cập nhật vai trò' : 'Thêm vai trò'"></span>
+        </h5>
+        <p class="text-muted small mb-0 mt-2" th:if="${role.isSystem}">
+          <i class="bi bi-info-circle me-1"></i>Đây là vai trò hệ thống — không thể xóa; có thể chỉnh quyền gán.
+        </p>
+      </div>
+      <div class="card-body">
+        <form th:action="@{/admin/roles/save}" th:object="${role}" method="post" novalidate accept-charset="UTF-8">
+          <input type="hidden" th:field="*{id}" th:if="${isEdit}"/>
+          <input type="hidden" name="isEdit" th:value="${isEdit}"/>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Mã vai trò <span class="text-danger">*</span></label>
+            <input type="text" th:field="*{code}"
+                   th:class="'form-control' + (${#fields.hasErrors('code')} ? ' is-invalid' : '')"
+                   maxlength="50" placeholder="VD: ADMIN" th:readonly="${isEdit}"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('code')}" th:errors="*{code}"></div>
+            <small class="text-muted" th:if="${isEdit}">Mã không đổi sau khi tạo.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tên vai trò <span class="text-danger">*</span></label>
+            <input type="text" th:field="*{name}"
+                   th:class="'form-control' + (${#fields.hasErrors('name')} ? ' is-invalid' : '')"
+                   maxlength="100"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Mô tả</label>
+            <textarea th:field="*{description}" class="form-control" rows="2" maxlength="255"></textarea>
+          </div>
+
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" th:field="*{isActive}" id="roleActive"/>
+            <label class="form-check-label" for="roleActive">Đang hoạt động</label>
+          </div>
+
+          <div class="mb-2 fw-semibold">Quyền được gán</div>
+          <div class="border rounded p-3 mb-4 bg-light" style="max-height: 280px; overflow-y: auto;">
+            <p class="text-muted small mb-2" th:if="${#lists.isEmpty(allPermissions)}">Chưa có quyền nào — hãy tạo trong mục Quyền.</p>
+            <div th:each="perm : ${allPermissions}" class="form-check py-1">
+              <input class="form-check-input" type="checkbox" name="permissionIds" th:id="${'perm-' + perm.id}"
+                     th:value="${perm.id}" th:checked="${selectedPermissionIds.contains(perm.id)}"/>
+              <label class="form-check-label" th:for="${'perm-' + perm.id}">
+                <code th:text="${perm.code}"></code>
+                <span th:text="| — ${perm.name}|"></span>
+                <span class="text-muted small" th:if="${perm.module != null and !#strings.isEmpty(perm.module)}"
+                      th:text="| (${perm.module})|"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>
+              <span th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'"></span>
+            </button>
+            <a th:href="@{/admin/roles}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i> Hủy
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</th:block>
+</body>
+</html>

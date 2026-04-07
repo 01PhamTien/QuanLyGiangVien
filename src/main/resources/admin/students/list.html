@@ -37,8 +37,9 @@
         <form th:action="@{/admin/students}" method="get" class="row g-2 mb-3">
           <div class="col-12 col-md-4">
             <input type="text" name="keyword" th:value="${keyword}" class="form-control form-control-sm"
-                   placeholder="Tìm theo tên, email..."/>
+                   placeholder="Mã, họ tên, email TK, giới tính, trạng thái, CCCD, địa chỉ…"/>
           </div>
+          <input type="hidden" name="size" th:value="${pageSize}"/>
           <div class="col-auto">
             <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-search me-1"></i> Lọc
@@ -52,30 +53,46 @@
         </form>
 
         <div class="table-responsive">
-          <table class="table table-hover table-bordered align-middle mb-0">
+          <table class="table table-hover table-bordered align-middle mb-0 table-sm">
             <thead class="table-primary">
               <tr>
-                <th class="text-center" style="width:50px;">#</th>
-                <th>Tên sinh viên</th>
-                <th>Email</th>
-                <th class="text-center" style="width:150px;">Thao tác</th>
+                <th class="text-center text-nowrap" style="width:48px;">#</th>
+                <th class="text-nowrap">Mã sinh viên<br/><span class="small fw-normal text-secondary">code</span></th>
+                <th class="text-nowrap">Trạng thái<br/><span class="small fw-normal text-secondary">status</span></th>
+                <th class="text-nowrap">Họ và tên<br/><span class="small fw-normal text-secondary">full_name</span></th>
+                <th class="text-nowrap">Giới tính<br/><span class="small fw-normal text-secondary">gender</span></th>
+                <th class="text-nowrap">Ngày sinh<br/><span class="small fw-normal text-secondary">date_of_birth</span></th>
+                <th class="text-nowrap">Ngày cấp CCCD/CMND<br/><span class="small fw-normal text-secondary">date_of_issue</span></th>
+                <th class="text-nowrap">Số CCCD/CMND<br/><span class="small fw-normal text-secondary">personal_identification_number</span></th>
+                <th class="text-nowrap">Nơi cấp<br/><span class="small fw-normal text-secondary">card_place</span></th>
+                <th class="text-nowrap">Địa chỉ thường trú<br/><span class="small fw-normal text-secondary">address</span></th>
+                <th class="text-nowrap">Địa chỉ hiện tại<br/><span class="small fw-normal text-secondary">current_address</span></th>
+                <th class="text-center text-nowrap" style="width:120px;">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr th:if="${#lists.isEmpty(studentPage.content)}">
-                <td colspan="4" class="text-center text-muted py-4">
+                <td colspan="12" class="text-center text-muted py-4">
                   <i class="bi bi-inbox fs-4 d-block mb-2"></i>Chưa có dữ liệu.
                 </td>
               </tr>
-              <tr th:each="s, stat : ${studentPage.content}">
-                <td class="text-center text-muted" th:text="${currentPage * 10 + stat.count}"></td>
-                <td th:text="${s.name}"></td>
-                <td class="text-muted" th:text="${s.email} ?: '-'"></td>
-                <td class="text-center">
-                  <a th:href="@{/admin/students/edit/{id}(id=${s.id})}" class="btn btn-sm btn-outline-primary me-1">
+              <tr th:each="row, stat : ${studentPage.content}">
+                <td class="text-center text-muted text-nowrap" th:text="${currentPage * pageSize + stat.count}"></td>
+                <td class="text-nowrap"><code th:text="${row.code}"></code></td>
+                <td class="text-nowrap"><code class="small" th:text="${row.status != null ? row.status : '—'}"></code></td>
+                <td th:text="${row.fullname}"></td>
+                <td class="text-nowrap" th:text="${row.gender != null ? row.gender : '—'}"></td>
+                <td class="text-nowrap" th:text="${row.dateOfBirth != null ? #temporals.format(row.dateOfBirth, 'dd/MM/yyyy') : '—'}"></td>
+                <td class="text-nowrap" th:text="${row.dateOfIssue != null ? #temporals.format(row.dateOfIssue, 'dd/MM/yyyy') : '—'}"></td>
+                <td class="text-nowrap" th:text="${row.personalIdentificationNumber != null ? row.personalIdentificationNumber : '—'}"></td>
+                <td class="small" th:title="${row.cardPlace}" th:text="${row.cardPlace != null ? row.cardPlace : '—'}"></td>
+                <td class="small" th:title="${row.address}" th:text="${row.address != null ? row.address : '—'}"></td>
+                <td class="small" th:title="${row.currentAddress}" th:text="${row.currentAddress != null ? row.currentAddress : '—'}"></td>
+                <td class="text-center text-nowrap">
+                  <a th:href="@{/admin/students/edit/{id}(id=${row.id})}" class="btn btn-sm btn-outline-primary me-1">
                     <i class="bi bi-pencil"></i>
                   </a>
-                  <form th:action="@{/admin/students/delete/{id}(id=${s.id})}" method="post" class="d-inline"
+                  <form th:action="@{/admin/students/delete/{id}(id=${row.id})}" method="post" class="d-inline"
                         onsubmit="return confirm('Bạn có chắc muốn xóa sinh viên này?');">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                       <i class="bi bi-trash"></i>
@@ -96,19 +113,19 @@
             <ul class="pagination pagination-sm mb-0">
               <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
                 <a class="page-link"
-                   th:href="@{/admin/students(keyword=${keyword}, page=${currentPage - 1}, size=5)}">
+                   th:href="@{/admin/students(keyword=${keyword}, page=${currentPage - 1}, size=${pageSize})}">
                   <i class="bi bi-chevron-left"></i>
                 </a>
               </li>
               <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                   class="page-item" th:classappend="${i == currentPage} ? 'active'">
                 <a class="page-link"
-                   th:href="@{/admin/students(keyword=${keyword}, page=${i}, size=5)}"
+                   th:href="@{/admin/students(keyword=${keyword}, page=${i}, size=${pageSize})}"
                    th:text="${i + 1}"></a>
               </li>
               <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
                 <a class="page-link"
-                   th:href="@{/admin/students(keyword=${keyword}, page=${currentPage + 1}, size=5)}">
+                   th:href="@{/admin/students(keyword=${keyword}, page=${currentPage + 1}, size=${pageSize})}">
                   <i class="bi bi-chevron-right"></i>
                 </a>
               </li>
@@ -122,4 +139,3 @@
 </th:block>
 </body>
 </html>
-

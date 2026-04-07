@@ -1,5 +1,6 @@
 package com.example.demo.students.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ import com.example.demo.students.service.StudentService;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin // cho phép frontend gọi
+@CrossOrigin
 public class StudentController {
 
     private final StudentService service;
@@ -28,41 +29,37 @@ public class StudentController {
         this.service = service;
     }
 
-    // GET ALL
     @GetMapping
     public List<Student> getAll() {
         return service.getAll();
     }
 
-    // GET BY ID
+    @GetMapping("/search")
+    public List<Student> search(
+            @RequestParam(value = "full_name", required = false, defaultValue = "") String fullName) {
+        if (fullName == null || fullName.isBlank()) {
+            return Collections.emptyList();
+        }
+        return service.search(fullName.trim());
+    }
+
     @GetMapping("/{id}")
     public Student getById(@PathVariable UUID id) {
         return service.getById(id);
     }
 
-    // CREATE
     @PostMapping
     public Student create(@RequestBody Student student) {
         return service.create(student);
     }
 
-    // UPDATE
     @PutMapping("/{id}")
-    public Student update(@PathVariable UUID id,
-                          @RequestBody Student student) {
+    public Student update(@PathVariable UUID id, @RequestBody Student student) {
         return service.update(id, student);
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
     public void delete(@PathVariable UUID id) {
         service.delete(id);
     }
-
-    // SEARCH BY NAME
-    @GetMapping("/search")
-    public List<Student> search(@RequestParam String full_name) {
-        return service.search(full_name);
-    }
-
 }

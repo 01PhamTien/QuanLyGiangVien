@@ -4,7 +4,11 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.UuidGenerator;
 
 import com.example.demo.roles.model.entity.Role;
@@ -12,7 +16,7 @@ import com.example.demo.roles.model.entity.Role;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", schema = "dbo")
 public class User {
     @Id
     @GeneratedValue
@@ -20,19 +24,28 @@ public class User {
     @Column(columnDefinition = "UNIQUEIDENTIFIER", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "username", length = 50)
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(max = 50)
+    @Column(name = "username", length = 50, columnDefinition = "NVARCHAR(50)")
     private String username;
 
-    @Column(name = "password", length = 255)
+    @JsonIgnore
+    @Size(max = 255)
+    @Column(name = "password", length = 255, columnDefinition = "NVARCHAR(255)")
     private String password;
 
-    @Column(name = "email", length = 100)
+    @Size(max = 100)
+    @Column(name = "full_name", length = 100, columnDefinition = "NVARCHAR(100)")
+    private String fullName;
+
+    @Size(max = 100)
+    @Column(name = "email", length = 100, columnDefinition = "NVARCHAR(100)")
     private String email;
 
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone", length = 20, columnDefinition = "NVARCHAR(20)")
     private String phone;
 
-    @Column(name = "avatar_url", length = 255)
+    @Column(name = "avatar_url", length = 255, columnDefinition = "NVARCHAR(255)")
     private String avatarUrl;
 
     @Column(name = "last_login_at")
@@ -61,11 +74,12 @@ public class User {
 
     public User() {}
 
-    public User(String username, String password, String email, String phone, String avatarUrl, LocalDateTime lastLoginAt,
+    public User(String username, String password, String fullName, String email, String phone, String avatarUrl, LocalDateTime lastLoginAt,
                 LocalDateTime createdAt, LocalDateTime updatedAt, UUID createdBy, UUID updatedBy,
                 LocalDateTime deletedAt, UUID deletedBy, Boolean isActive) {
         this.username = username;
         this.password = password;
+        this.fullName = fullName;
         this.email = email;
         this.phone = phone;
         this.avatarUrl = avatarUrl;
@@ -88,6 +102,9 @@ public class User {
     
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -125,6 +142,7 @@ public class User {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
+        schema = "dbo",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )

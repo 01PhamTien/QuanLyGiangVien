@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layoutPage(pageTitle=${isEdit} ? 'Sửa người dùng' : 'Thêm người dùng', content=~{:: content})}">
+<body>
+<th:block th:fragment="content">
+  <div class="container-fluid">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a th:href="@{/admin}">Trang quản trị</a></li>
+        <li class="breadcrumb-item"><a th:href="@{/admin/users}">Người dùng</a></li>
+        <li class="breadcrumb-item active" th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'"></li>
+      </ol>
+    </nav>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 720px;">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-semibold">
+          <i class="bi bi-person-fill-gear me-2 text-primary"></i>
+          <span th:text="${isEdit} ? 'Cập nhật tài khoản' : 'Thêm tài khoản'"></span>
+        </h5>
+        <p class="text-muted small mb-0 mt-2" th:if="${isEdit}">
+          <i class="bi bi-info-circle me-1"></i>Để trống mật khẩu nếu không đổi.
+        </p>
+      </div>
+      <div class="card-body">
+        <form th:action="@{/admin/users/save}" th:object="${user}" method="post" novalidate accept-charset="UTF-8">
+          <input type="hidden" th:field="*{id}" th:if="${isEdit}"/>
+          <input type="hidden" name="isEdit" th:value="${isEdit}"/>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Tên đăng nhập <span class="text-danger">*</span></label>
+            <input type="text" th:field="*{username}"
+                   th:class="'form-control' + (${#fields.hasErrors('username')} ? ' is-invalid' : '')"
+                   maxlength="50" placeholder="VD: admin01" th:readonly="${isEdit}"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+            <small class="text-muted" th:if="${isEdit}">Tên đăng nhập không đổi sau khi tạo.</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Mật khẩu <span class="text-danger" th:unless="${isEdit}">*</span></label>
+            <input type="password" name="password" class="form-control" maxlength="255" autocomplete="new-password"
+                   th:attr="placeholder=${isEdit} ? 'Để trống nếu giữ mật khẩu cũ' : 'Nhập mật khẩu'"
+                   th:required="${!isEdit}"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Họ và tên</label>
+            <input type="text" th:field="*{fullName}" class="form-control" maxlength="100" placeholder="Hiển thị trên hệ thống"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" th:field="*{email}" class="form-control" maxlength="100"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Số điện thoại</label>
+            <input type="text" th:field="*{phone}" class="form-control" maxlength="20"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Ảnh đại diện (URL)</label>
+            <input type="text" th:field="*{avatarUrl}" class="form-control" maxlength="255" placeholder="https://…"/>
+          </div>
+
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" th:field="*{isActive}" id="userActive"/>
+            <label class="form-check-label" for="userActive">Đang hoạt động</label>
+          </div>
+
+          <div class="mb-2 fw-semibold">Vai trò</div>
+          <div class="border rounded p-3 mb-4 bg-light" style="max-height: 280px; overflow-y: auto;">
+            <p class="text-muted small mb-2" th:if="${#lists.isEmpty(allRoles)}">Chưa có vai trò — hãy tạo trong mục Vai trò.</p>
+            <div th:each="role : ${allRoles}" class="form-check py-1">
+              <input class="form-check-input" type="checkbox" name="roleIds" th:id="${'role-' + role.id}"
+                     th:value="${role.id}" th:checked="${selectedRoleIds.contains(role.id)}"/>
+              <label class="form-check-label" th:for="${'role-' + role.id}">
+                <code th:text="${role.code}"></code>
+                <span th:text="| — ${role.name}|"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>
+              <span th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'"></span>
+            </button>
+            <a th:href="@{/admin/users}" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i> Hủy
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</th:block>
+</body>
+</html>
