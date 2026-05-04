@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<body>
+<aside class="adminlte-sidebar" id="adminSidebarTemplate">
+  <div class="brand">
+    <i class="fa-solid fa-bolt"></i>
+    <span>University Admin</span>
+  </div>
+  <nav class="nav nav-pills nav-sidebar flex-column">
+    <div class="sidebar-section">Overview</div>
+    <a class="nav-link" data-page="dashboard" href="/admin/index.html"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+    <a class="nav-link" data-page="students" href="/admin/students/list.html"><i class="fa-solid fa-graduation-cap"></i><span>sinh viên</span></a>
+    <a class="nav-link" data-page="users" href="/admin/users/list.html"><i class="fa-solid fa-users"></i><span>Người dùng</span></a>
+    <div class="sidebar-section">System</div>
+    <a class="nav-link" data-page="roles" href="/admin/roles/list.html"><i class="fa-solid fa-user-shield"></i><span>Vai trò</span></a>
+    <a class="nav-link" data-page="permissions" href="/admin/permissions/list.html"><i class="fa-solid fa-key"></i><span>Phân quyền</span></a>
+  </nav>
+</aside>
+<script data-admin-shell>
+  window.initAdminShell = function initAdminShell() {
+    const page = document.body.getAttribute("data-page") || "";
+    document.body.classList.add("adminlte-body");
+    const isMobile = window.matchMedia("(max-width: 992px)").matches;
+
+    if (!isMobile && localStorage.getItem("sidebar-collapsed") === "1") {
+      document.body.classList.add("sidebar-collapsed");
+    }
+
+    const topbar = document.createElement("header");
+    topbar.className = "adminlte-topbar";
+    topbar.innerHTML = [
+      '<div class="topbar-left">',
+      '<button id="sidebarToggleBtn" class="sidebar-toggle-btn" type="button" title="Thu gon menu"><i class="fa-solid fa-bars"></i></button>',
+      '<span class="topbar-brand">Apex Admin Dashboard</span>',
+      '</div>',
+      '<div class="d-flex align-items-center gap-2">',
+      '<button class="btn btn-sm btn-light border"><i class="fa-regular fa-bell"></i></button>',
+      '<a class="btn btn-sm btn-outline-secondary" href="/"><i class="fa-solid fa-house me-1"></i>Trang chu</a>',
+      '</div>'
+    ].join("");
+    document.body.prepend(topbar);
+
+    const sidebarTemplate = document.getElementById("adminSidebarTemplate");
+    if (sidebarTemplate) {
+      const sidebar = sidebarTemplate.cloneNode(true);
+      sidebar.id = "adminSidebar";
+      const pathname = window.location.pathname;
+      let hasActive = false;
+      sidebar.querySelectorAll(".nav-link").forEach((a) => {
+        const dataPage = a.getAttribute("data-page");
+        const href = a.getAttribute("href") || "";
+        const byPage = dataPage && dataPage === page;
+        const byPath = pathname === href;
+        if (byPage || byPath) {
+          a.classList.add("active");
+          a.setAttribute("aria-current", "page");
+          hasActive = true;
+        } else {
+          a.classList.remove("active");
+        }
+      });
+      if (!hasActive) {
+        const first = sidebar.querySelector('.nav-link[data-page="dashboard"]');
+        if (first) first.classList.add("active");
+      }
+      document.body.prepend(sidebar);
+    }
+
+    if (!document.querySelector(".adminlte-main")) {
+      const wrapper = document.createElement("main");
+      wrapper.className = "adminlte-main";
+      while (document.body.children.length > 2) {
+        wrapper.appendChild(document.body.children[2]);
+      }
+      document.body.appendChild(wrapper);
+    }
+
+    const toggleBtn = document.getElementById("sidebarToggleBtn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => {
+        if (window.matchMedia("(max-width: 992px)").matches) {
+          document.body.classList.toggle("sidebar-open");
+          return;
+        }
+        document.body.classList.toggle("sidebar-collapsed");
+        localStorage.setItem(
+          "sidebar-collapsed",
+          document.body.classList.contains("sidebar-collapsed") ? "1" : "0"
+        );
+      });
+    }
+  };
+</script>
+</body>
+</html>

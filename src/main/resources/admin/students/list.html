@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản lý sinh viên</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet"/>
+  <link href="/admin/assets/adminlte-shell.css" rel="stylesheet"/>
+</head>
+<body class="bg-light" data-page="students">
+  <div class="container py-3">
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+      <a href="/admin/index.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid me-1"></i>Admin</a>
+      <a href="/admin/students/list.html" class="btn btn-primary btn-sm">Sinh viên</a>
+      <a href="/admin/users/list.html" class="btn btn-outline-secondary btn-sm">Người dùng</a>
+      <a href="/admin/roles/list.html" class="btn btn-outline-secondary btn-sm">Vai trò</a>
+      <a href="/admin/permissions/list.html" class="btn btn-outline-secondary btn-sm">Quyền</a>
+    </div>
+
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/index.html">Trang quản trị</a></li>
+        <li class="breadcrumb-item active">Sinh viên</li>
+      </ol>
+    </nav>
+
+    <div id="alertBox" class="alert alert-dismissible fade show d-none" role="alert">
+      <span id="alertText"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h5 class="mb-0 fw-semibold">
+          <i class="bi bi-people-fill me-2 text-primary"></i>Danh sách sinh viên
+        </h5>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="/admin/students/form.html" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Thêm mới
+          </a>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <form id="searchForm" class="row g-2 mb-3">
+          <div class="col-12 col-md-4">
+            <input type="text" id="keywordInput" class="form-control form-control-sm"
+                   placeholder="Mã, họ tên, email TK, giới tính, trạng thái, CCCD, địa chỉ…"/>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-search me-1"></i> Lọc
+            </button>
+          </div>
+          <div class="col-auto">
+            <button type="button" id="resetBtn" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Làm mới
+            </button>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle mb-0 table-sm">
+            <thead class="table-primary">
+              <tr>
+                <th class="text-center text-nowrap" style="width:48px;">#</th>
+                <th class="text-nowrap">Mã sinh viên<br/><span class="small fw-normal text-secondary">code</span></th>
+                <th class="text-nowrap">Trạng thái<br/><span class="small fw-normal text-secondary">status</span></th>
+                <th class="text-nowrap">Họ và tên<br/><span class="small fw-normal text-secondary">full_name</span></th>
+                <th class="text-nowrap">Giới tính<br/><span class="small fw-normal text-secondary">gender</span></th>
+                <th class="text-nowrap">Ngày sinh<br/><span class="small fw-normal text-secondary">date_of_birth</span></th>
+                <th class="text-nowrap">Ngày cấp CCCD/CMND<br/><span class="small fw-normal text-secondary">date_of_issue</span></th>
+                <th class="text-nowrap">Số CCCD/CMND<br/><span class="small fw-normal text-secondary">personal_identification_number</span></th>
+                <th class="text-nowrap">Nơi cấp<br/><span class="small fw-normal text-secondary">card_place</span></th>
+                <th class="text-nowrap">Địa chỉ thường trú<br/><span class="small fw-normal text-secondary">address</span></th>
+                <th class="text-nowrap">Địa chỉ hiện tại<br/><span class="small fw-normal text-secondary">current_address</span></th>
+                <th class="text-center text-nowrap" style="width:120px;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="studentTableBody">
+              <tr>
+                <td colspan="12" class="text-center text-muted py-4">
+                  <i class="bi bi-hourglass-split fs-4 d-block mb-2"></i>Đang tải dữ liệu...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <small class="text-muted">
+            Tổng <strong id="totalElements">0</strong> bản ghi
+            | Trang <strong id="currentPageText">1</strong> / <strong id="totalPagesText">1</strong>
+          </small>
+          <nav>
+            <ul id="pagination" class="pagination pagination-sm mb-0"></ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    (() => {
+      const studentsApiBase = "/api/students";
+      const studentsPageApi = "/api/students/page";
+      const studentsEditPageBase = "/admin/students/form.html?id=";
+      const pageSize = 10;
+      let currentPage = 0;
+      let totalPages = 1;
+      let keyword = "";
+
+      const tableBody = document.getElementById("studentTableBody");
+      const pagination = document.getElementById("pagination");
+      const keywordInput = document.getElementById("keywordInput");
+      const searchForm = document.getElementById("searchForm");
+      const resetBtn = document.getElementById("resetBtn");
+      const totalElementsText = document.getElementById("totalElements");
+      const currentPageText = document.getElementById("currentPageText");
+      const totalPagesText = document.getElementById("totalPagesText");
+      const alertBox = document.getElementById("alertBox");
+      const alertText = document.getElementById("alertText");
+
+      function showAlert(message, type) {
+        alertBox.classList.remove("d-none", "alert-success", "alert-danger");
+        alertBox.classList.add(type === "success" ? "alert-success" : "alert-danger");
+        alertText.textContent = message;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "—")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function formatDate(isoDate) {
+        if (!isoDate) return "—";
+        const date = new Date(isoDate);
+        if (Number.isNaN(date.getTime())) return "—";
+        return date.toLocaleDateString("vi-VN");
+      }
+
+      function renderRows(rows) {
+        if (!rows.length) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="12" class="text-center text-muted py-4">
+                <i class="bi bi-inbox fs-4 d-block mb-2"></i>Chưa có dữ liệu.
+              </td>
+            </tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = rows.map((row, index) => `
+          <tr>
+            <td class="text-center text-muted text-nowrap">${currentPage * pageSize + index + 1}</td>
+            <td class="text-nowrap"><code>${escapeHtml(row.code)}</code></td>
+            <td class="text-nowrap"><code class="small">${escapeHtml(row.status)}</code></td>
+            <td>${escapeHtml(row.fullname)}</td>
+            <td class="text-nowrap">${escapeHtml(row.gender)}</td>
+            <td class="text-nowrap">${formatDate(row.dateOfBirth)}</td>
+            <td class="text-nowrap">${formatDate(row.dateOfIssue)}</td>
+            <td class="text-nowrap">${escapeHtml(row.personalIdentificationNumber)}</td>
+            <td class="small" title="${escapeHtml(row.cardPlace)}">${escapeHtml(row.cardPlace)}</td>
+            <td class="small" title="${escapeHtml(row.address)}">${escapeHtml(row.address)}</td>
+            <td class="small" title="${escapeHtml(row.currentAddress)}">${escapeHtml(row.currentAddress)}</td>
+            <td class="text-center text-nowrap">
+              <a href="${studentsEditPageBase}${row.id}" class="btn btn-sm btn-outline-primary me-1">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-delete-id="${row.id}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      function renderPagination() {
+        pagination.innerHTML = "";
+        if (totalPages <= 1) return;
+
+        const addItem = (label, page, disabled, active) => {
+          const li = document.createElement("li");
+          li.className = `page-item${disabled ? " disabled" : ""}${active ? " active" : ""}`;
+          const button = document.createElement("button");
+          button.className = "page-link";
+          button.type = "button";
+          button.innerHTML = label;
+          button.disabled = disabled;
+          button.addEventListener("click", () => loadData(page));
+          li.appendChild(button);
+          pagination.appendChild(li);
+        };
+
+        addItem('<i class="bi bi-chevron-left"></i>', currentPage - 1, currentPage === 0, false);
+        for (let i = 0; i < totalPages; i += 1) {
+          addItem(String(i + 1), i, false, i === currentPage);
+        }
+        addItem('<i class="bi bi-chevron-right"></i>', currentPage + 1, currentPage >= totalPages - 1, false);
+      }
+
+      async function loadData(page = 0) {
+        currentPage = Math.max(page, 0);
+        const params = new URLSearchParams({
+          page: String(currentPage),
+          size: String(pageSize),
+          keyword
+        });
+
+        try {
+          const response = await fetch(`${studentsPageApi}?${params.toString()}`);
+          if (!response.ok) throw new Error("Không thể tải danh sách sinh viên");
+          const data = await response.json();
+
+          totalPages = data.totalPages || 1;
+          renderRows(data.content || []);
+          renderPagination();
+
+          totalElementsText.textContent = String(data.totalElements || 0);
+          currentPageText.textContent = String(currentPage + 1);
+          totalPagesText.textContent = String(totalPages);
+        } catch (error) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="12" class="text-center text-danger py-4">${escapeHtml(error.message)}</td>
+            </tr>`;
+          showAlert(error.message, "error");
+        }
+      }
+
+      tableBody.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-delete-id]");
+        if (!button) return;
+
+        const studentId = button.getAttribute("data-delete-id");
+        if (!studentId || !confirm("Bạn có chắc muốn xóa sinh viên này?")) return;
+
+        try {
+          const response = await fetch(`${studentsApiBase}/${studentId}`, { method: "DELETE" });
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || "Không xóa được sinh viên");
+          }
+          showAlert("Đã xóa sinh viên.", "success");
+          await loadData(currentPage);
+        } catch (error) {
+          showAlert(error.message, "error");
+        }
+      });
+
+      searchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        keyword = keywordInput.value.trim();
+        loadData(0);
+      });
+
+      resetBtn.addEventListener("click", () => {
+        keywordInput.value = "";
+        keyword = "";
+        loadData(0);
+      });
+
+      const flashSuccess = new URLSearchParams(window.location.search).get("success");
+      if (flashSuccess) showAlert(flashSuccess, "success");
+      loadData(0);
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/admin/assets/admin-shell-loader.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thêm/Cập nhật sinh viên</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet"/>
+  <link href="/admin/assets/adminlte-shell.css" rel="stylesheet"/>
+</head>
+<body class="bg-light" data-page="students">
+  <div class="container py-3">
+    <div class="mb-3 d-flex gap-2 flex-wrap">
+      <a href="/admin/index.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid me-1"></i>Admin</a>
+      <a href="/admin/students/list.html" class="btn btn-primary btn-sm">Sinh viên</a>
+    </div>
+
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/admin/index.html">Trang quản trị</a></li>
+        <li class="breadcrumb-item"><a href="/admin/students/list.html">Sinh viên</a></li>
+        <li class="breadcrumb-item active" id="formModeText">Thêm mới</li>
+      </ol>
+    </nav>
+
+    <div id="errorBox" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+      <span id="errorText"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0" style="max-width: 960px;">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-semibold">
+          <i class="bi bi-people-fill me-2 text-primary"></i>
+          <span id="formTitle">Thêm sinh viên</span>
+        </h5>
+        <p class="text-muted small mb-0 mt-2">Các trường bám theo cột bảng <code>dbo.students</code> và khóa <code>user_id</code>.</p>
+      </div>
+      <div class="card-body">
+        <form id="studentForm" method="post" novalidate accept-charset="UTF-8">
+          <input type="hidden" id="id" />
+
+          <h6 class="text-secondary border-bottom pb-2 mb-3">Thông tin chính</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Mã sinh viên <span class="text-danger">*</span> <span class="text-muted small">code</span></label>
+              <input type="text" id="code" class="form-control" maxlength="20" placeholder="VD: SV00001" required/>
+              <small id="codeReadonlyHint" class="text-muted d-none">Mã không đổi sau khi tạo.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Trạng thái <span class="text-muted small">status</span></label>
+              <select id="status" class="form-select">
+                <option value="">— Chọn —</option>
+                <option value="studying">Đang học</option>
+                <option value="graduated">Đã tốt nghiệp</option>
+                <option value="suspended">Bảo lưu / tạm dừng</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span> <span class="text-muted small">full_name</span></label>
+              <input type="text" id="fullname" class="form-control" maxlength="100" placeholder="Họ tên đầy đủ có dấu" required/>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Tài khoản (UUID) <span class="text-muted small">user_id → users.id</span></label>
+              <input type="text" id="user_id" class="form-control font-monospace"
+                     placeholder="Để trống nếu chưa gán tài khoản"/>
+              <small class="text-muted">Nhập đúng UUID người dùng trong bảng <code>users</code>.</small>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Giới tính <span class="text-muted small">gender</span></label>
+              <select id="gender" class="form-select">
+                <option value="">—</option>
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Ngày sinh <span class="text-muted small">date_of_birth</span></label>
+              <input type="date" id="date_of_birth" class="form-control"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Ngày cấp CCCD/CMND <span class="text-muted small">date_of_issue</span></label>
+              <input type="date" id="date_of_issue" class="form-control"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Số CCCD/CMND <span class="text-muted small">personal_identification_number</span></label>
+              <input type="text" id="personal_identification_number" class="form-control" maxlength="20"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nơi cấp <span class="text-muted small">card_place</span></label>
+              <input type="text" id="card_place" class="form-control" maxlength="100"
+                     placeholder="VD: Cục Cảnh sát QLHC về TTXH"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Địa chỉ thường trú <span class="text-muted small">address</span></label>
+              <input type="text" id="address" class="form-control" maxlength="300"/>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Địa chỉ hiện tại <span class="text-muted small">current_address</span></label>
+              <input type="text" id="current_address" class="form-control" maxlength="300"/>
+            </div>
+          </div>
+
+          <h6 class="text-secondary border-bottom pb-2 mb-3 mt-4">Khóa ngoại (UNIQUEIDENTIFIER)</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">academic_year_year</label>
+              <input type="text" id="academic_year_year" class="form-control font-monospace" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">department_id</label>
+              <input type="text" id="department_id" class="form-control font-monospace" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">major_id</label>
+              <input type="text" id="major_id" class="form-control font-monospace" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">training_program_id</label>
+              <input type="text" id="training_program_id" class="form-control font-monospace" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">student_classe_id</label>
+              <input type="text" id="student_classe_id" class="form-control font-monospace" placeholder="UUID hoặc để trống"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Năm / thời điểm nhập học <span class="text-muted small">admission_year</span></label>
+              <input type="datetime-local" id="admission_year" class="form-control"/>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="isActive"/>
+                <label class="form-check-label" for="isActive">Đang hoạt động <span class="text-muted small">is_active</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div id="metaSection" class="d-none">
+            <h6 class="text-secondary border-bottom pb-2 mb-3 mt-4">Hệ thống (chỉ đọc)</h6>
+            <div class="row g-2 small text-muted">
+              <div class="col-md-6"><strong>id</strong><br/><code id="metaId">—</code></div>
+              <div class="col-md-6"><strong>created_at</strong><br/><span id="metaCreatedAt">—</span></div>
+              <div class="col-md-6"><strong>updated_at</strong><br/><span id="metaUpdatedAt">—</span></div>
+              <div class="col-md-6"><strong>created_by</strong><br/><code id="metaCreatedBy">—</code></div>
+              <div class="col-md-6"><strong>updated_by</strong><br/><code id="metaUpdatedBy">—</code></div>
+              <div class="col-md-6"><strong>deleted_at</strong><br/><span id="metaDeletedAt">—</span></div>
+              <div class="col-md-6"><strong>deleted_by</strong><br/><code id="metaDeletedBy">—</code></div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+              <i class="bi bi-save me-1"></i>
+              <span id="submitBtnText">Thêm mới</span>
+            </button>
+            <a href="/admin/students/list.html" class="btn btn-outline-secondary">
+              <i class="bi bi-x-lg me-1"></i> Hủy
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    (() => {
+      const idFromUrl = new URLSearchParams(window.location.search).get("id");
+      const isEdit = !!idFromUrl;
+      const studentId = idFromUrl;
+      const studentsApiBase = "/api/students";
+      const studentsListPage = "/admin/students/list.html";
+
+      const form = document.getElementById("studentForm");
+      const submitBtn = document.getElementById("submitBtn");
+      const errorBox = document.getElementById("errorBox");
+      const errorText = document.getElementById("errorText");
+      const formTitle = document.getElementById("formTitle");
+      const formModeText = document.getElementById("formModeText");
+      const submitBtnText = document.getElementById("submitBtnText");
+      const codeReadonlyHint = document.getElementById("codeReadonlyHint");
+      const metaSection = document.getElementById("metaSection");
+
+      const fields = [
+        "id", "code", "fullname", "date_of_birth", "gender", "personal_identification_number",
+        "date_of_issue", "card_place", "address", "current_address", "academic_year_year",
+        "department_id", "major_id", "training_program_id", "status", "student_classe_id",
+        "admission_year", "user_id"
+      ];
+
+      function showError(message) {
+        errorBox.classList.remove("d-none");
+        errorText.textContent = message;
+      }
+
+      function setValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = value ?? "";
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("vi-VN");
+      }
+
+      function mapDataToForm(student) {
+        fields.forEach((key) => setValue(key, student[key]));
+        document.getElementById("isActive").checked = !!student.isActive;
+        const codeInput = document.getElementById("code");
+        if (isEdit) codeInput.setAttribute("readonly", "readonly");
+
+        const meta = {
+          metaId: student.id,
+          metaCreatedAt: formatDateTime(student.createdAt),
+          metaUpdatedAt: formatDateTime(student.updatedAt),
+          metaCreatedBy: student.createdBy ?? "—",
+          metaUpdatedBy: student.updatedBy ?? "—",
+          metaDeletedAt: formatDateTime(student.deletedAt),
+          metaDeletedBy: student.deletedBy ?? "—"
+        };
+        Object.entries(meta).forEach(([key, value]) => {
+          const el = document.getElementById(key);
+          if (el) el.textContent = value;
+        });
+      }
+
+      function getPayload() {
+        return {
+          id: document.getElementById("id").value || null,
+          code: document.getElementById("code").value.trim(),
+          fullname: document.getElementById("fullname").value.trim(),
+          date_of_birth: document.getElementById("date_of_birth").value || null,
+          gender: document.getElementById("gender").value || null,
+          personal_identification_number: document.getElementById("personal_identification_number").value || null,
+          date_of_issue: document.getElementById("date_of_issue").value || null,
+          card_place: document.getElementById("card_place").value || null,
+          address: document.getElementById("address").value || null,
+          current_address: document.getElementById("current_address").value || null,
+          academic_year_year: document.getElementById("academic_year_year").value || null,
+          department_id: document.getElementById("department_id").value || null,
+          major_id: document.getElementById("major_id").value || null,
+          training_program_id: document.getElementById("training_program_id").value || null,
+          status: document.getElementById("status").value || null,
+          student_classe_id: document.getElementById("student_classe_id").value || null,
+          admission_year: document.getElementById("admission_year").value || null,
+          user_id: document.getElementById("user_id").value || null,
+          isActive: document.getElementById("isActive").checked
+        };
+      }
+
+      async function loadStudent() {
+        if (!isEdit || !studentId) return;
+        try {
+          const response = await fetch(`${studentsApiBase}/${studentId}`);
+          if (!response.ok) throw new Error("Không tải được dữ liệu sinh viên");
+          const data = await response.json();
+          if (!data || !data.id) throw new Error("Không tìm thấy sinh viên");
+          mapDataToForm(data);
+        } catch (error) {
+          showError(error.message);
+        }
+      }
+
+      function initEditModeUI() {
+        if (!isEdit) return;
+        formTitle.textContent = "Cập nhật sinh viên";
+        formModeText.textContent = "Cập nhật";
+        submitBtnText.textContent = "Cập nhật";
+        codeReadonlyHint.classList.remove("d-none");
+        metaSection.classList.remove("d-none");
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorBox.classList.add("d-none");
+
+        const payload = getPayload();
+        if (!payload.code || !payload.fullname) {
+          showError("Mã sinh viên và họ tên là bắt buộc.");
+          return;
+        }
+
+        const method = isEdit ? "PUT" : "POST";
+        const url = isEdit ? `${studentsApiBase}/${studentId}` : studentsApiBase;
+
+        submitBtn.disabled = true;
+        try {
+          const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || "Lưu sinh viên thất bại");
+          }
+          window.location.href = `${studentsListPage}?success=` + encodeURIComponent(
+            isEdit ? "Đã cập nhật sinh viên." : "Đã thêm sinh viên mới."
+          );
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      loadStudent();
+      initEditModeUI();
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/admin/assets/admin-shell-loader.js"></script>
+</body>
+</html>
