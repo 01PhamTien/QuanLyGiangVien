@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vị trí nhân viên</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet"/>
+  <link href="/admin/assets/adminlte-shell.css" rel="stylesheet"/>
+</head>
+<body class="bg-light" data-page="employee-positions">
+<div class="container py-3">
+  <div class="page-header d-flex align-items-center justify-content-between gap-2 mb-3">
+    <h4 class="page-title"><i class="fa-solid fa-arrows-left-right"></i> Vị trí nhân viên</h4>
+    <a href="/admin/employee-positions/form.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Thêm mới</a>
+  </div>
+  <div class="card toolbar-card mb-3">
+    <form id="searchForm" class="search-inline p-3">
+      <input id="keyword" class="form-control" placeholder="Tìm theo mã nhân viên, tên, chức danh..."/>
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass me-1"></i>Lọc</button>
+      <button class="btn btn-outline-secondary" type="button" id="resetBtn"><i class="fa-solid fa-rotate-left me-1"></i>Làm mới</button>
+    </form>
+  </div>
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div><span id="pageInfo" class="text-muted"></span></div>
+      <div class="d-flex align-items-center gap-2">
+        <label class="mb-0">Hiển thị</label>
+        <select id="pageSize" class="form-select form-select-sm" style="width: auto; min-width: 80px;">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover mb-0 bg-white">
+          <thead><tr><th>#</th><th>NV</th><th>Chức danh</th><th>Bắt đầu</th><th>Kết thúc</th><th>Ghi chú</th><th style="width:140px;"></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <nav>
+        <ul id="pagination" class="pagination pagination-sm justify-content-center my-3"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  let items = [];
+  let currentPage = 1;
+  const tbody = document.getElementById("tbody");
+  const keyword = document.getElementById("keyword");
+  const resetBtn = document.getElementById("resetBtn");
+  const pageSizeSelect = document.getElementById("pageSize");
+  const pageInfo = document.getElementById("pageInfo");
+  const pagination = document.getElementById("pagination");
+
+  function formatDateTime(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
+  }
+  function escapeHtml(value) {
+    const div = document.createElement("div");
+    div.textContent = value ?? "";
+    return div.innerHTML;
+  }
+
+  function render(rows, offset) {
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="fa-regular fa-folder-open me-1"></i>Không có dữ liệu</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map((item, idx) => `
+      <tr>
+        <td>${offset + idx + 1}</td>
+        <td><strong>${escapeHtml(item.employeeCode)}</strong><br>${escapeHtml(item.employeeName)}</td>
+        <td>${escapeHtml(item.positionName)}</td>
+        <td class="text-nowrap">${formatDateTime(item.startDate)}</td>
+        <td class="text-nowrap">${formatDateTime(item.endDate)}</td>
+        <td>${escapeHtml(item.note || item.description || "—")}</td>
+        <td class="action-btns">
+          <a class="btn btn-sm btn-outline-primary" href="/admin/employee-positions/form.html?id=${item.id}" title="Sửa"><i class="fa-solid fa-pen"></i></a>
+          <button class="btn btn-sm btn-outline-danger" data-del="${item.id}" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`).join("");
+  }
+
+  function renderPagination(pageCount) {
+    if (pageCount <= 1) {
+      pagination.innerHTML = "";
+      return;
+    }
+    const pages = [];
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(pageCount, startPage + 4);
+    pages.push(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><button class="page-link" data-page="${currentPage - 1}">‹</button></li>`);
+    for (let page = startPage; page <= endPage; page++) {
+      pages.push(`<li class="page-item ${page === currentPage ? 'active' : ''}"><button class="page-link" data-page="${page}">${page}</button></li>`);
+    }
+    pages.push(`<li class="page-item ${currentPage === pageCount ? 'disabled' : ''}"><button class="page-link" data-page="${currentPage + 1}">›</button></li>`);
+    pagination.innerHTML = pages.join("");
+  }
+
+  function renderTable(filtered) {
+    const pageSize = Number(pageSizeSelect.value);
+    const total = filtered.length;
+    const pageCount = Math.max(1, Math.ceil(total / pageSize));
+    currentPage = Math.min(currentPage, pageCount);
+    const offset = (currentPage - 1) * pageSize;
+    const pageRows = filtered.slice(offset, offset + pageSize);
+    render(pageRows, offset);
+    pageInfo.textContent = `${total} bản ghi • Trang ${currentPage} trên ${pageCount}`;
+    renderPagination(pageCount);
+  }
+
+  function filterAndRender() {
+    const term = keyword.value.trim().toLowerCase();
+    const filtered = items.filter(item =>
+      !term || [item.employeeCode, item.employeeName, item.positionName, item.note, item.description]
+        .some(x => String(x || "").toLowerCase().includes(term))
+    );
+    renderTable(filtered);
+  }
+
+  async function load() {
+    const res = await fetch("/api/employee-positions");
+    items = await res.json();
+    filterAndRender();
+  }
+
+  tbody.addEventListener("click", async (event) => {
+    const id = event.target.closest("button")?.getAttribute("data-del");
+    if (!id) return;
+    if (!confirm("Xóa bản ghi vị trí nhân viên này?")) return;
+    await fetch(`/api/employee-positions/${id}`, { method: "DELETE" });
+    load();
+  });
+
+  document.getElementById("searchForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    currentPage = 1;
+    filterAndRender();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    keyword.value = "";
+    currentPage = 1;
+    filterAndRender();
+  });
+
+  pageSizeSelect.addEventListener("change", () => {
+    currentPage = 1;
+    filterAndRender();
+  });
+
+  pagination.addEventListener("click", (event) => {
+    const page = Number(event.target.closest("button")?.getAttribute("data-page"));
+    if (!page || page === currentPage) return;
+    currentPage = page;
+    filterAndRender();
+  });
+
+  load();
+})();
+</script>
+<script src="/admin/assets/admin-shell-loader.js"></script>
+</body>
+</html>

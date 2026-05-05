@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="refresh" content="0; url=/admin/employees/list.html" />
+  <title>Employee</title>
+</head>
+<body>
+  <p>Đang chuyển hướng tới <a href="/admin/employees/list.html">Quản lý nhân viên</a>…</p>
+</body>
+</html>
+
+<!-- FORM -->
+<div>
+    <input id="code" placeholder="Code">
+    <input id="name" placeholder="Name">
+    <input id="email" placeholder="Email">
+
+    <select id="department"></select>
+    <select id="position"></select>
+
+    <button onclick="createEmployee()">Add</button>
+</div>
+
+<hr>
+
+<!-- TABLE -->
+<table border="1">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Position</th>
+        </tr>
+    </thead>
+    <tbody id="table"></tbody>
+</table>
+
+<script>
+const API = "http://localhost:8080/api";
+
+// LOAD DATA
+function loadEmployees() {
+    fetch(`${API}/employees`)
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
+            data.forEach(e => {
+                html += `
+                    <tr>
+                        <td>${e.code}</td>
+                        <td>${e.fullName}</td>
+                        <td>${e.email}</td>
+                        <td>${e.departmentName}</td>
+                        <td>${e.positionName}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById("table").innerHTML = html;
+        });
+}
+
+// LOAD DROPDOWN
+function loadDepartments() {
+    fetch(`${API}/departments`)
+        .then(res => res.json())
+        .then(data => {
+            let html = `<option value="">Chọn khoa</option>`;
+            data.forEach(d => {
+                html += `<option value="${d.id}">${d.name}</option>`;
+            });
+            document.getElementById("department").innerHTML = html;
+        });
+}
+
+function loadPositions() {
+    fetch(`${API}/positions`)
+        .then(res => res.json())
+        .then(data => {
+            let html = `<option value="">Chọn vị trí</option>`;
+            data.forEach(p => {
+                html += `<option value="${p.id}">${p.name}</option>`;
+            });
+            document.getElementById("position").innerHTML = html;
+        });
+}
+
+// CREATE
+function createEmployee() {
+    const data = {
+        code: document.getElementById("code").value,
+        fullName: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        departmentId: document.getElementById("department").value,
+        positionId: document.getElementById("position").value
+    };
+
+    fetch(`${API}/employees`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        alert("Thêm thành công");
+        loadEmployees();
+    });
+}
+
+// INIT
+loadEmployees();
+loadDepartments();
+loadPositions();
+
+</script>
+
+</body>
+</html>

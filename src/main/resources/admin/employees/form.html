@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form nhân viên</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet"/>
+  <link href="/admin/assets/adminlte-shell.css" rel="stylesheet"/>
+</head>
+<body class="bg-light" data-page="employees">
+<div class="container py-3">
+  <div class="page-header d-flex align-items-center justify-content-between gap-2 mb-3">
+    <h4 class="page-title"><i class="fa-solid fa-users"></i> Quản lý nhân viên</h4>
+    <a href="/admin/employees/list.html" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left me-1"></i> Quay lại</a>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div id="alertPlaceholder"></div>
+      <form id="form" class="needs-validation" novalidate>
+        <input type="hidden" id="id" />
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Mã nhân viên</label>
+            <input id="code" class="form-control" placeholder="VD: EMP001" required />
+            <div class="invalid-feedback">Mã nhân viên không được để trống.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Họ tên</label>
+            <input id="fullName" class="form-control" placeholder="VD: Nguyễn Văn A" required />
+            <div class="invalid-feedback">Họ tên không được để trống.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Email</label>
+            <input id="email" type="email" class="form-control" placeholder="VD: a@example.com" />
+            <div class="invalid-feedback">Email không hợp lệ.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phòng ban</label>
+            <select id="departmentId" class="form-select" required>
+              <option value="">Chọn phòng ban</option>
+            </select>
+            <div class="invalid-feedback">Vui lòng chọn phòng ban.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Chức danh</label>
+            <select id="positionId" class="form-select" required>
+              <option value="">Chọn chức danh</option>
+            </select>
+            <div class="invalid-feedback">Vui lòng chọn chức danh.</div>
+          </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary"><i class="fa-solid fa-save me-1"></i>Lưu</button>
+          <a href="/admin/employees/list.html" class="btn btn-light border">Hủy</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+  const form = document.getElementById("form");
+  const idInput = document.getElementById("id");
+  const codeInput = document.getElementById("code");
+  const fullNameInput = document.getElementById("fullName");
+  const emailInput = document.getElementById("email");
+  const departmentSelect = document.getElementById("departmentId");
+  const positionSelect = document.getElementById("positionId");
+  const alertPlaceholder = document.getElementById("alertPlaceholder");
+
+  function getQueryParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+  }
+
+  function showAlert(message, type = "danger") {
+    alertPlaceholder.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>`;
+  }
+
+  function resetValidation() {
+    [codeInput, fullNameInput, emailInput, departmentSelect, positionSelect].forEach(el => {
+      el.classList.remove("is-invalid");
+      el.setCustomValidity("");
+    });
+    form.classList.remove("was-validated");
+  }
+
+  function markInvalid(element, message) {
+    element.classList.add("is-invalid");
+    element.setCustomValidity(message);
+  }
+
+  async function loadDropdowns() {
+    const [deps, positions] = await Promise.all([
+      fetch("/api/departments").then(res => res.json()),
+      fetch("/api/positions").then(res => res.json())
+    ]);
+    departmentSelect.innerHTML = `<option value="">Chọn phòng ban</option>` + deps.map(d => `<option value="${d.id}">${d.name || d.code}</option>`).join("");
+    positionSelect.innerHTML = `<option value="">Chọn chức danh</option>` + positions.map(p => `<option value="${p.id}">${p.name || p.code}</option>`).join("");
+  }
+
+  async function loadEmployee(id) {
+    const res = await fetch(`/api/employees/${id}`);
+    if (!res.ok) {
+      showAlert("Không thể tải thông tin nhân viên.");
+      return;
+    }
+    const e = await res.json();
+    idInput.value = e.id || "";
+    codeInput.value = e.code || "";
+    fullNameInput.value = e.fullName || "";
+    emailInput.value = e.email || "";
+    departmentSelect.value = e.departmentId || "";
+    positionSelect.value = e.positionId || "";
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    resetValidation();
+
+    let valid = true;
+    if (!codeInput.value.trim()) {
+      markInvalid(codeInput, "Mã nhân viên không được để trống.");
+      valid = false;
+    }
+    if (!fullNameInput.value.trim()) {
+      markInvalid(fullNameInput, "Họ tên không được để trống.");
+      valid = false;
+    }
+    if (emailInput.value.trim() && !/^\S+@\S+\.\S+$/.test(emailInput.value.trim())) {
+      markInvalid(emailInput, "Email không hợp lệ.");
+      valid = false;
+    }
+    if (!departmentSelect.value) {
+      markInvalid(departmentSelect, "Vui lòng chọn phòng ban.");
+      valid = false;
+    }
+    if (!positionSelect.value) {
+      markInvalid(positionSelect, "Vui lòng chọn chức danh.");
+      valid = false;
+    }
+
+    if (!valid) {
+      form.classList.add("was-validated");
+      showAlert("Vui lòng kiểm tra lại các trường có màu đỏ.");
+      return;
+    }
+
+    const payload = {
+      code: codeInput.value.trim(),
+      fullName: fullNameInput.value.trim(),
+      email: emailInput.value.trim() || null,
+      departmentId: departmentSelect.value,
+      positionId: positionSelect.value
+    };
+    const id = idInput.value;
+    const url = id ? `/api/employees/${encodeURIComponent(id)}` : "/api/employees";
+    const method = id ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      showAlert(await res.text());
+      return;
+    }
+    window.location.href = "/admin/employees/list.html";
+  });
+
+  loadDropdowns().then(() => {
+    const id = getQueryParam("id");
+    if (id) {
+      loadEmployee(id);
+    }
+  }).catch(() => showAlert("Không thể tải dữ liệu phòng ban hoặc chức danh."));
+})();
+</script>
+<script src="/admin/assets/admin-shell-loader.js"></script>
+</body>
+</html>
